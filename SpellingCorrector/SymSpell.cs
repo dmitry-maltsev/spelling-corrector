@@ -7,14 +7,14 @@ public record Suggestion(string Word, int Distance, int Frequency);
 public class SymSpell
 {
     private const int DefaultEditDistance = 2;
-    private const int DefaultPrefixLength = -1;
+    private const int DefaultPrefixLength = 7;
     private const int DefaultInitialCapacity = 82_765;
 
     private readonly int _maxEditDistance;
     private readonly int _maxPrefixLength;
 
-    private readonly Dictionary<string, string[]> _editsMap;
-    private readonly Dictionary<string, int> _wordsFrequencies;
+    private readonly Dictionary<int, string[]> _editsMap = new(DefaultInitialCapacity);
+    private readonly Dictionary<string, int> _wordsFrequencies = new (DefaultInitialCapacity);
     
     private readonly IDistance _distanceAlgorithm = new DamerauOSA();
 
@@ -24,9 +24,6 @@ public class SymSpell
     {
         _maxEditDistance = maxEditDistance;
         _maxPrefixLength = maxPrefixLength;
-        
-        _editsMap = new Dictionary<string, string[]>(DefaultInitialCapacity);
-        _wordsFrequencies = new Dictionary<string, int>(DefaultInitialCapacity);
     }
         
     public int EntriesCount => _editsMap.Count;
@@ -56,14 +53,16 @@ public class SymSpell
                  
         foreach (var edit in edits)
         {
-            if (_editsMap.TryGetValue(edit, out var candidates))
+            var hash = GetHash(edit);
+            
+            if (_editsMap.TryGetValue(hash, out var candidates))
             {
                 Array.Resize(ref candidates, candidates.Length + 1);
             }
             else
             {
                 candidates = new string[1];
-                _editsMap.Add(edit, candidates);
+                _editsMap.Add(hash, candidates);
             }
             
             candidates[^1] = word;
@@ -96,6 +95,33 @@ public class SymSpell
         }
     }
     
+    private static int GetHash(string s)
+    {
+        var len = s.Length;
+        
+        var lenMask = len;
+        if (lenMask > 3) 
+            lenMask = 3;
+
+        var hash = 2166136261;
+        
+        for (var i = 0; i < len; i++)
+        {
+            unchecked
+            {
+                hash ^= s[i];
+                hash *= 16777619;
+            }
+        }
+
+        const int compactLevel = 5;
+        
+        hash &= (uint.MaxValue >> (3 + compactLevel)) << 2;
+        hash |= (uint)lenMask;
+        
+        return (int)hash;
+    }
+    
     public List<Suggestion> Lookup(string word, int maxEditDistance = DefaultEditDistance, int topCount = 3)
     {
         var words = new HashSet<string>();
@@ -105,7 +131,8 @@ public class SymSpell
 
         foreach (var edit in edits)
         {
-            if (!_editsMap.TryGetValue(edit, out var candidates)) continue;
+            var hash = GetHash(edit);
+            if (!_editsMap.TryGetValue(hash, out var candidates)) continue;
             
             foreach (var candidate in candidates)
             {
