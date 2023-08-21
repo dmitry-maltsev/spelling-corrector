@@ -6,14 +6,31 @@ public record Suggestion(string Word, int Distance, int Frequency);
 
 public class SymSpell
 {
-    private const int MaxEditDistance = 2;
-    private const int MaxPrefixLength = 7;
+    private const int DefaultEditDistance = 2;
+    private const int DefaultPrefixLength = -1;
+    private const int DefaultInitialCapacity = 82_765;
+
+    private readonly int _maxEditDistance;
+    private readonly int _maxPrefixLength;
+
+    private readonly Dictionary<string, string[]> _editsMap;
+    private readonly Dictionary<string, int> _wordsFrequencies;
     
-    private readonly Dictionary<string, string[]> _dictionary = new(3_850_000);
-    private readonly Dictionary<string, int> _frequencies = new(100_000);
     private readonly IDistance _distanceAlgorithm = new DamerauOSA();
 
-    public int Count => _dictionary.Count;
+    public SymSpell(
+        int maxEditDistance = DefaultEditDistance,
+        int maxPrefixLength = DefaultPrefixLength)
+    {
+        _maxEditDistance = maxEditDistance;
+        _maxPrefixLength = maxPrefixLength;
+        
+        _editsMap = new Dictionary<string, string[]>(DefaultInitialCapacity);
+        _wordsFrequencies = new Dictionary<string, int>(DefaultInitialCapacity);
+    }
+        
+    public int EntriesCount => _editsMap.Count;
+    public int WordsCount => _wordsFrequencies.Count;
 
     public void CreateDictionaryFromFile(string filePath)
     {
@@ -33,33 +50,33 @@ public class SymSpell
 
     private void AddWord(string word, int frequency)
     {
-        _frequencies.Add(word, frequency);
+        _wordsFrequencies.Add(word, frequency);
         
-        var edits = GenerateEdits(word, MaxEditDistance);
+        var edits = GenerateEdits(word, _maxEditDistance);
                  
         foreach (var edit in edits)
         {
-            if (_dictionary.TryGetValue(edit, out var candidates))
+            if (_editsMap.TryGetValue(edit, out var candidates))
             {
                 Array.Resize(ref candidates, candidates.Length + 1);
             }
             else
             {
                 candidates = new string[1];
-                _dictionary.Add(edit, candidates);
+                _editsMap.Add(edit, candidates);
             }
             
             candidates[^1] = word;
         }
     }
     
-    private static HashSet<string> GenerateEdits(string word, int depth)
+    private HashSet<string> GenerateEdits(string word, int depth)
     {
-        // if (word.Length > MaxPrefixLength) 
-        //     word = word[..MaxPrefixLength];
+        if (_maxPrefixLength > 0 && word.Length > _maxPrefixLength) 
+            word = word[.._maxPrefixLength];
 
         var edits = new HashSet<string> { word };
-        if (word.Length <= MaxEditDistance)
+        if (word.Length <= _maxEditDistance)
             edits.Add(string.Empty);
         
         GenerateEdits(word, depth, edits);
@@ -79,7 +96,7 @@ public class SymSpell
         }
     }
     
-    public List<Suggestion> Lookup(string word, int maxEditDistance = MaxEditDistance, int topCount = 3)
+    public List<Suggestion> Lookup(string word, int maxEditDistance = DefaultEditDistance, int topCount = 3)
     {
         var words = new HashSet<string>();
         var suggestions = new List<Suggestion>();
@@ -88,16 +105,16 @@ public class SymSpell
 
         foreach (var edit in edits)
         {
-            if (!_dictionary.TryGetValue(edit, out var candidates)) continue;
+            if (!_editsMap.TryGetValue(edit, out var candidates)) continue;
             
             foreach (var candidate in candidates)
             {
                 if (!words.Add(candidate)) continue;
                 
-                var distance = (int)_distanceAlgorithm.Distance(word, candidate, MaxEditDistance);
+                var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
                 if (distance < 0) continue;
                 
-                var frequency = _frequencies[candidate];
+                var frequency = _wordsFrequencies[candidate];
                 suggestions.Add(new Suggestion(candidate, distance, frequency));
             }
         }
