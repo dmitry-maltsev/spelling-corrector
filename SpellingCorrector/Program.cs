@@ -22,11 +22,11 @@ while (true)
     timer.Restart();
     var suggestions = symSpell.Lookup(word, topCount:3);
     timer.Stop();
-
-    Console.WriteLine($"Elapse: {timer.Elapsed.TotalMilliseconds:0.000} ms");
-
+    
     foreach (var suggestion in suggestions)
     {
         Console.WriteLine($"{suggestion.Word} - {suggestion.Distance} - {suggestion.Frequency:N0}");
     }
+    
+    Console.WriteLine($"Elapsed: {timer.Elapsed.TotalMilliseconds:0.000} ms");
 }

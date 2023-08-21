@@ -7,7 +7,8 @@ public record Suggestion(string Word, int Distance, int Frequency);
 public class SymSpell
 {
     private const int DefaultEditDistance = 2;
-    private const int DefaultPrefixLength = 7;
+    private const int DefaultPrefixLength = 9;
+    private const int DefaultCompactLevel = 5;
     private const int DefaultInitialCapacity = 82_765;
 
     private readonly int _maxEditDistance;
@@ -71,13 +72,14 @@ public class SymSpell
     
     private HashSet<string> GenerateEdits(string word, int depth)
     {
-        if (_maxPrefixLength > 0 && word.Length > _maxPrefixLength) 
-            word = word[.._maxPrefixLength];
-
         var edits = new HashSet<string> { word };
+        
         if (word.Length <= _maxEditDistance)
             edits.Add(string.Empty);
         
+        if (_maxPrefixLength > 0 && word.Length > _maxPrefixLength) 
+            word = word[.._maxPrefixLength];
+
         GenerateEdits(word, depth, edits);
         
         return edits;
@@ -114,9 +116,7 @@ public class SymSpell
             }
         }
 
-        const int compactLevel = 5;
-        
-        hash &= (uint.MaxValue >> (3 + compactLevel)) << 2;
+        hash &= (uint.MaxValue >> (3 + DefaultCompactLevel)) << 2;
         hash |= (uint)lenMask;
         
         return (int)hash;
@@ -137,7 +137,7 @@ public class SymSpell
             foreach (var candidate in candidates)
             {
                 if (!words.Add(candidate)) continue;
-                
+
                 var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
                 if (distance < 0) continue;
                 
