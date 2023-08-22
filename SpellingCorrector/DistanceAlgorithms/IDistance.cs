@@ -1,4 +1,4 @@
-namespace SpellingCorrector.Algorithms;
+namespace SpellingCorrector.DistanceAlgorithms;
 
 public interface IDistance
 {

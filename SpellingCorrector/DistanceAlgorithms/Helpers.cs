@@ -4,7 +4,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace SpellingCorrector.Algorithms;
+namespace SpellingCorrector.DistanceAlgorithms;
 
 internal static class Helpers
 {

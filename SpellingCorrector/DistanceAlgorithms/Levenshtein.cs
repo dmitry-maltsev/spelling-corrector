@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace SpellingCorrector.Algorithms;
+namespace SpellingCorrector.DistanceAlgorithms;
 
 /// <summary>
 /// Class providing optimized methods for computing Levenshtein comparisons between two strings.

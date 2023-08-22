@@ -1,16 +1,17 @@
 ﻿using System.Diagnostics;
 using SpellingCorrector;
+using SpellingCorrector.CorrectionAlgorithms;
 
-var spell = new Greedy();
+ICorrectionAlgorithm corrector = new Greedy();
 
 var memSize = GC.GetTotalMemory(true);
 var timer = Stopwatch.StartNew();
 
-spell.CreateDictionaryFromFile("Dictionaries/ru-100k.txt");
+LoadDictionary("Dictionaries/ru-100k.txt");
 
 timer.Stop();
 var memDiff = GC.GetTotalMemory(true) - memSize;
-Console.WriteLine($"Build dictionary of {spell.EntriesCount:N0} in {timer.Elapsed.TotalMilliseconds}ms. Memory: {memDiff / 1024.0 / 1024.0:N0}MB");
+Console.WriteLine($"Build dictionary of {corrector.EntriesCount:N0} in {timer.Elapsed.TotalMilliseconds}ms. Memory: {memDiff / 1024.0 / 1024.0:N0}MB");
 
 while (true)
 {
@@ -20,7 +21,7 @@ while (true)
     if (word is null) continue;
 
     timer.Restart();
-    var suggestions = spell.Lookup(word, topCount:3);
+    var suggestions = corrector.FindSuggestions(word, topCount:3);
     timer.Stop();
     
     foreach (var suggestion in suggestions)
@@ -29,4 +30,20 @@ while (true)
     }
     
     Console.WriteLine($"Elapsed: {timer.Elapsed.TotalMilliseconds:0.000} ms");
+}
+
+void LoadDictionary(string filePath)
+{
+    if (!File.Exists(filePath))
+    {
+        throw new FileNotFoundException("The file path does not exist.");
+    }
+
+    using var reader = new StreamReader(filePath);
+        
+    while (reader.ReadLine() is { } line)
+    {
+        var values = line.Split();
+        corrector.AddEntry(word: values[0], frequency: long.Parse(values[1]));
+    }
 }

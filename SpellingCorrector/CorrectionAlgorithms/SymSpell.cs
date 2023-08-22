@@ -1,10 +1,8 @@
-using SpellingCorrector.Algorithms;
+using SpellingCorrector.DistanceAlgorithms;
 
-namespace SpellingCorrector;
+namespace SpellingCorrector.CorrectionAlgorithms;
 
-public record Suggestion(string Word, int Distance, long Frequency);
-
-public class SymSpell
+public class SymSpell : ICorrectionAlgorithm
 {
     private const int DefaultEditDistance = 2;
     private const int DefaultPrefixLength = 7;
@@ -27,25 +25,8 @@ public class SymSpell
     }
         
     public int EntriesCount => _editsMap.Count;
-    public int WordsCount => _wordsFrequencies.Count;
 
-    public void CreateDictionaryFromFile(string filePath)
-    {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException("The file path does not exist.");
-        }
-
-        using var reader = new StreamReader(filePath);
-        
-        while (reader.ReadLine() is { } line)
-        {
-            var values = line.Split();
-            AddWord(word: values[0], frequency: long.Parse(values[1]));
-        }
-    }
-
-    private void AddWord(string word, long frequency)
+    public void AddEntry(string word, long frequency)
     {
         _wordsFrequencies.Add(word, frequency);
         
@@ -101,7 +82,7 @@ public class SymSpell
         return s.GetHashCode();
     }
     
-    public List<Suggestion> Lookup(string word, int maxEditDistance = DefaultEditDistance, int topCount = 3)
+    public List<Suggestion> FindSuggestions(string word, int maxEditDistance, int topCount)
     {
         var words = new HashSet<string>();
         var suggestions = new List<Suggestion>();
