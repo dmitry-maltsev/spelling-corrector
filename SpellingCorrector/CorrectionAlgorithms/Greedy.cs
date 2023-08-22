@@ -15,22 +15,14 @@ public class Greedy : ICorrectionAlgorithm
         _dictionary.Add(word, frequency);
     }
 
-    public List<Suggestion> FindSuggestions(string word, int maxEditDistance, int topCount)
+    public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
-        var suggestions = new List<Suggestion>();
-
         foreach (var (candidate, frequency) in _dictionary)
         {
             var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
             if (distance < 0) continue;
 
-            suggestions.Add(new Suggestion(candidate, distance, frequency));
+            yield return new Suggestion(candidate, distance, frequency);
         }
-        
-        return suggestions
-            .OrderBy(x => x.Distance)
-            .ThenByDescending(x => x.Frequency)
-            .Take(topCount)
-            .ToList();
     }
 }

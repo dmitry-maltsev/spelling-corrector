@@ -82,10 +82,9 @@ public class SymSpell : ICorrectionAlgorithm
         return s.GetHashCode();
     }
     
-    public List<Suggestion> FindSuggestions(string word, int maxEditDistance, int topCount)
+    public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
         var words = new HashSet<string>();
-        var suggestions = new List<Suggestion>();
         
         var edits = GenerateEdits(word, maxEditDistance);
 
@@ -102,14 +101,8 @@ public class SymSpell : ICorrectionAlgorithm
                 if (distance < 0) continue;
                 
                 var frequency = _wordsFrequencies[candidate];
-                suggestions.Add(new Suggestion(candidate, distance, frequency));
+                yield return new Suggestion(candidate, distance, frequency);
             }
         }
-
-        return suggestions
-            .OrderBy(x => x.Distance)
-            .ThenByDescending(x => x.Frequency)
-            .Take(topCount)
-            .ToList();
     }
 }
