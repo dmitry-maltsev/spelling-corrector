@@ -2,7 +2,7 @@ using SpellingCorrector.Algorithms;
 
 namespace SpellingCorrector;
 
-public record Suggestion(string Word, int Distance, int Frequency);
+public record Suggestion(string Word, int Distance, long Frequency);
 
 public class SymSpell
 {
@@ -14,7 +14,7 @@ public class SymSpell
     private readonly int _maxPrefixLength;
 
     private readonly Dictionary<int, string[]> _editsMap = new(DefaultInitialCapacity);
-    private readonly Dictionary<string, int> _wordsFrequencies = new (DefaultInitialCapacity);
+    private readonly Dictionary<string, long> _wordsFrequencies = new (DefaultInitialCapacity);
     
     private readonly IDistance _distanceAlgorithm = new DamerauOSA();
 
