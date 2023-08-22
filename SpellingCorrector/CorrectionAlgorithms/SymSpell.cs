@@ -2,7 +2,7 @@ using SpellingCorrector.DistanceAlgorithms;
 
 namespace SpellingCorrector.CorrectionAlgorithms;
 
-public class SymSpell : ICorrectionAlgorithm
+public class SymSpell
 {
     private const int DefaultEditDistance = 2;
     private const int DefaultPrefixLength = 7;
@@ -12,7 +12,7 @@ public class SymSpell : ICorrectionAlgorithm
     private readonly int _maxPrefixLength;
 
     private readonly Dictionary<int, string[]> _editsMap = new(DefaultInitialCapacity);
-    private readonly Dictionary<string, long> _wordsFrequencies = new (DefaultInitialCapacity);
+    private readonly Dictionary<string, long> _frequencies = new (DefaultInitialCapacity);
     
     private readonly IDistance _distanceAlgorithm = new DamerauOSA();
 
@@ -25,10 +25,26 @@ public class SymSpell : ICorrectionAlgorithm
     }
         
     public int EntriesCount => _editsMap.Count;
-
-    public void AddEntry(string word, long frequency)
+    
+    public void LoadDictionary(string filePath)
     {
-        _wordsFrequencies.Add(word, frequency);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("The file path does not exist.");
+        }
+
+        using var reader = new StreamReader(filePath);
+        
+        while (reader.ReadLine() is { } line)
+        {
+            var values = line.Split();
+            AddEntry(word: values[0], frequency: long.Parse(values[1]));
+        }
+    }
+
+    private void AddEntry(string word, long frequency)
+    {
+        _frequencies.Add(word, frequency);
         
         var edits = GenerateEdits(word, _maxEditDistance);
                  
@@ -82,7 +98,7 @@ public class SymSpell : ICorrectionAlgorithm
         return s.GetHashCode();
     }
     
-    public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
+    private IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
         var words = new HashSet<string>();
         
@@ -100,9 +116,20 @@ public class SymSpell : ICorrectionAlgorithm
                 var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
                 if (distance < 0) continue;
                 
-                var frequency = _wordsFrequencies[candidate];
+                var frequency = _frequencies[candidate];
                 yield return new Suggestion(candidate, distance, frequency);
             }
         }
+    }
+    
+    public List<Suggestion> Lookup(string word, int maxEditDistance, int topCount)
+    {
+        var suggestions = FindSuggestions(word, maxEditDistance);
+        
+        return suggestions
+            .OrderBy(x => x.Distance)
+            .ThenByDescending(x => x.Frequency)
+            .Take(topCount)
+            .ToList();
     }
 }

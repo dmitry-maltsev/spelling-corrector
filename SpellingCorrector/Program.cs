@@ -1,16 +1,16 @@
 ﻿using System.Diagnostics;
-using SpellingCorrector;
+using SpellingCorrector.CorrectionAlgorithms;
 
-var corrector = new Corrector();
+var spell = new Greedy();
 
 var memSize = GC.GetTotalMemory(true);
 var timer = Stopwatch.StartNew();
 
-corrector.LoadDictionary("Dictionaries/ru-100k.txt");
+spell.LoadDictionary("Dictionaries/ru-100k.txt");
 
 timer.Stop();
 var memDiff = GC.GetTotalMemory(true) - memSize;
-Console.WriteLine($"Build dictionary of {corrector.EntriesCount:N0} in {timer.Elapsed.TotalMilliseconds}ms. Memory: {memDiff / 1024.0 / 1024.0:N0}MB");
+Console.WriteLine($"Build dictionary of {spell.EntriesCount:N0} in {timer.Elapsed.TotalMilliseconds}ms. Memory: {memDiff / 1024.0 / 1024.0:N0}MB");
 
 while (true)
 {
@@ -20,7 +20,7 @@ while (true)
     if (word is null) continue;
 
     timer.Restart();
-    var suggestions = corrector.FindSuggestions(word, topCount:3);
+    var suggestions = spell.Lookup(word, maxEditDistance: 2, topCount: 3);
     timer.Stop();
     
     foreach (var suggestion in suggestions)
