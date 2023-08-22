@@ -7,9 +7,8 @@ public record Suggestion(string Word, int Distance, int Frequency);
 public class SymSpell
 {
     private const int DefaultEditDistance = 2;
-    private const int DefaultPrefixLength = 9;
-    private const int DefaultCompactLevel = 5;
-    private const int DefaultInitialCapacity = 82_765;
+    private const int DefaultPrefixLength = 7;
+    private const int DefaultInitialCapacity = 64_000;
 
     private readonly int _maxEditDistance;
     private readonly int _maxPrefixLength;
@@ -72,14 +71,14 @@ public class SymSpell
     
     private HashSet<string> GenerateEdits(string word, int depth)
     {
+        if (_maxPrefixLength > 0 && word.Length > _maxPrefixLength) 
+            word = word[.._maxPrefixLength];
+
         var edits = new HashSet<string> { word };
         
         if (word.Length <= _maxEditDistance)
             edits.Add(string.Empty);
         
-        if (_maxPrefixLength > 0 && word.Length > _maxPrefixLength) 
-            word = word[.._maxPrefixLength];
-
         GenerateEdits(word, depth, edits);
         
         return edits;
@@ -99,27 +98,7 @@ public class SymSpell
     
     private static int GetHash(string s)
     {
-        var len = s.Length;
-        
-        var lenMask = len;
-        if (lenMask > 3) 
-            lenMask = 3;
-
-        var hash = 2166136261;
-        
-        for (var i = 0; i < len; i++)
-        {
-            unchecked
-            {
-                hash ^= s[i];
-                hash *= 16777619;
-            }
-        }
-
-        hash &= (uint.MaxValue >> (3 + DefaultCompactLevel)) << 2;
-        hash |= (uint)lenMask;
-        
-        return (int)hash;
+        return s.GetHashCode();
     }
     
     public List<Suggestion> Lookup(string word, int maxEditDistance = DefaultEditDistance, int topCount = 3)
