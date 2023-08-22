@@ -41,11 +41,11 @@ public class SymSpell
         while (reader.ReadLine() is { } line)
         {
             var values = line.Split();
-            AddWord(word: values[0], frequency: int.Parse(values[1]));
+            AddWord(word: values[0], frequency: long.Parse(values[1]));
         }
     }
 
-    private void AddWord(string word, int frequency)
+    private void AddWord(string word, long frequency)
     {
         _wordsFrequencies.Add(word, frequency);
         

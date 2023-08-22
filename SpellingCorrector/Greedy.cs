@@ -24,7 +24,7 @@ public class Greedy
         while (reader.ReadLine() is { } line)
         {
             var values = line.Split();
-            _dictionary.Add(values[0], int.Parse(values[1]));
+            _dictionary.Add(values[0], long.Parse(values[1]));
         }
     }
 
