@@ -5,7 +5,7 @@ namespace SpellingCorrector.CorrectionAlgorithms;
 public class SymSpell
 {
     private const int DefaultEditDistance = 2;
-    private const int DefaultPrefixLength = 7;
+    private const int DefaultPrefixLength = -1;
     private const int DefaultInitialCapacity = 64_000;
 
     private readonly int _maxEditDistance;
