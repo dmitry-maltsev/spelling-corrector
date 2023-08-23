@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
 using SpellingCorrector.CorrectionAlgorithms;
 
-var spell = new Greedy();
+var spell = new SymSpell();
 
 var memSize = GC.GetTotalMemory(true);
 var timer = Stopwatch.StartNew();
 
-spell.LoadDictionary("Dictionaries/ru-100k.txt");
+spell.LoadDictionary("Dictionaries/frequency_dictionary_en_82_765.txt");
 
 timer.Stop();
 var memDiff = GC.GetTotalMemory(true) - memSize;
