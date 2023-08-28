@@ -37,11 +37,19 @@ public class LinSpell : ISpellingAlgorithm
     
     public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
+        if (_dictionary.TryGetValue(word, out var wordFrequency))
+            yield return new Suggestion(word, 0, wordFrequency);
+        
+        if (maxEditDistance == 0) yield break;
+        
         foreach (var (candidate, frequency) in _dictionary)
         {
+            if (Math.Abs(candidate.Length - word.Length) > maxEditDistance) continue;
+            if (candidate == word) continue;
+            
             var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
             if (distance < 0) continue;
-
+            
             yield return new Suggestion(candidate, distance, frequency);
         }
     }
