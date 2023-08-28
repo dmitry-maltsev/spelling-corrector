@@ -1,3 +1,3 @@
-namespace SpellingCorrector.CorrectionAlgorithms;
+namespace SpellingCorrector.SpellingAlgorithms;
 
 public record Suggestion(string Word, int Distance, long Frequency);

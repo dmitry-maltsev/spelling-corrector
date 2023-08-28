@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
-using SpellingCorrector.CorrectionAlgorithms;
+using SpellingCorrector.SpellingAlgorithms;
 
-var spell = new SymSpell();
+var spell = new LinSpell();
 
 var memSize = GC.GetTotalMemory(true);
 var timer = Stopwatch.StartNew();
 
-spell.LoadDictionary("Dictionaries/frequency_dictionary_en_82_765.txt");
+spell.LoadDictionary("Dictionaries/ru-100k.txt");
 
 timer.Stop();
 var memDiff = GC.GetTotalMemory(true) - memSize;
@@ -20,10 +20,17 @@ while (true)
     if (word is null) continue;
 
     timer.Restart();
-    var suggestions = spell.Lookup(word, maxEditDistance: 2, topCount: 3);
+    
+    var suggestions = spell.FindSuggestions(word, maxEditDistance: 2);
+    var topSuggestions = suggestions
+        .OrderBy(x => x.Distance)
+        .ThenByDescending(x => x.Frequency)
+        .Take(5)
+        .ToList();
+    
     timer.Stop();
     
-    foreach (var suggestion in suggestions)
+    foreach (var suggestion in topSuggestions)
     {
         Console.WriteLine($"{suggestion.Word} - {suggestion.Distance} - {suggestion.Frequency:N0}");
     }

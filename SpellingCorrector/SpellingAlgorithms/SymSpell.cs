@@ -1,8 +1,8 @@
 using SpellingCorrector.DistanceAlgorithms;
 
-namespace SpellingCorrector.CorrectionAlgorithms;
+namespace SpellingCorrector.SpellingAlgorithms;
 
-public class SymSpell
+public class SymSpell : ISpellingAlgorithm
 {
     private const int DefaultEditDistance = 2;
     private const int DefaultPrefixLength = -1;
@@ -98,7 +98,7 @@ public class SymSpell
         return s.GetHashCode();
     }
     
-    private IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
+    public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
         var words = new HashSet<string>();
         
@@ -120,16 +120,5 @@ public class SymSpell
                 yield return new Suggestion(candidate, distance, frequency);
             }
         }
-    }
-    
-    public List<Suggestion> Lookup(string word, int maxEditDistance, int topCount)
-    {
-        var suggestions = FindSuggestions(word, maxEditDistance);
-        
-        return suggestions
-            .OrderBy(x => x.Distance)
-            .ThenByDescending(x => x.Frequency)
-            .Take(topCount)
-            .ToList();
     }
 }

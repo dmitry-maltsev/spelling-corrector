@@ -1,12 +1,21 @@
 using SpellingCorrector.DistanceAlgorithms;
 
-namespace SpellingCorrector.CorrectionAlgorithms;
+namespace SpellingCorrector.SpellingAlgorithms;
 
-public class Greedy
+public class LinSpell : ISpellingAlgorithm
 {
-    private readonly Dictionary<string, long> _dictionary = new(100_000);
-    
-    private readonly IDistance _distanceAlgorithm = new DamerauOSA();
+    private readonly Dictionary<string, long> _dictionary;
+    private readonly IDistance _distanceAlgorithm;
+
+    public LinSpell(int initialCapacity, IDistance distanceAlgorithm)
+    {
+        _dictionary = new Dictionary<string, long>(initialCapacity);
+        _distanceAlgorithm = distanceAlgorithm;
+    }
+
+    public LinSpell() : this(100_000, new DamerauOSA())
+    {
+    }
     
     public int EntriesCount => _dictionary.Count;
     
@@ -26,7 +35,7 @@ public class Greedy
         }
     }
     
-    private IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
+    public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
         foreach (var (candidate, frequency) in _dictionary)
         {
@@ -35,16 +44,5 @@ public class Greedy
 
             yield return new Suggestion(candidate, distance, frequency);
         }
-    }
-    
-    public List<Suggestion> Lookup(string word, int maxEditDistance, int topCount)
-    {
-        var suggestions = FindSuggestions(word, maxEditDistance);
-        
-        return suggestions
-            .OrderBy(x => x.Distance)
-            .ThenByDescending(x => x.Frequency)
-            .Take(topCount)
-            .ToList();
     }
 }
