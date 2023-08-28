@@ -23,6 +23,9 @@
       <None Update="Dictionaries\singular.txt">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Dictionaries\frequency_dictionary_en_82_765.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
