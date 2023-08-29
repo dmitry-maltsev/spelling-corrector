@@ -6,7 +6,7 @@ public class SymSpell : ISpellingAlgorithm
 {
     private const int DefaultEditDistance = 2;
     private const int DefaultPrefixLength = -1;
-    private const int DefaultInitialCapacity = 3_842_600;
+    private const int DefaultInitialCapacity = 3_844_178;
 
     private readonly int _maxEditDistance;
     private readonly int _maxPrefixLength;
@@ -94,9 +94,22 @@ public class SymSpell : ISpellingAlgorithm
         }
     }
     
-    private static int GetHash(string s)
+    private static int GetHash(string str)
     {
-        return s.GetHashCode();
+        unchecked
+        {
+            var hash1 = (5381 << 16) + 5381;
+            var hash2 = hash1;
+        
+            for (var i = 0; i < str.Length; i += 2)
+            {
+                hash1 = ((hash1 << 5) + hash1) ^ str[i];
+                if (i == str.Length - 1) break;
+                hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+            }
+        
+            return hash1 + hash2 * 1566083941;
+        }
     }
     
     public IEnumerable<Suggestion> FindSuggestions(string term, int maxEditDistance)
@@ -121,7 +134,9 @@ public class SymSpell : ISpellingAlgorithm
             {
                 if (!seenWords.Add(candidate)) continue;
                 if (Math.Abs(candidate.Length - term.Length) > maxEditDistance) continue;
-
+                if (candidate.Length < edit.Length) continue;
+                if (candidate.Length == edit.Length && candidate != edit) continue;
+                
                 var distance = (int)_distanceAlgorithm.Distance(term, candidate, maxEditDistance);
                 if (distance < 0) continue;
                 
