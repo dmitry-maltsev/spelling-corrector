@@ -12,7 +12,7 @@ public class SymSpell : ISpellingAlgorithm
     private readonly int _maxPrefixLength;
 
     private readonly Dictionary<int, string[]> _editsMap = new(DefaultInitialCapacity);
-    private readonly Dictionary<string, long> _frequencies = new (DefaultInitialCapacity);
+    private readonly Dictionary<string, long> _dictionary = new (DefaultInitialCapacity);
     
     private readonly IDistance _distanceAlgorithm = new DamerauOSA();
 
@@ -44,7 +44,7 @@ public class SymSpell : ISpellingAlgorithm
 
     private void AddEntry(string word, long frequency)
     {
-        _frequencies.Add(word, frequency);
+        _dictionary.Add(word, frequency);
         
         var edits = GenerateEdits(word, _maxEditDistance);
                  
@@ -100,8 +100,12 @@ public class SymSpell : ISpellingAlgorithm
     
     public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
     {
-        var words = new HashSet<string>();
+        if (_dictionary.TryGetValue(word, out var wordFrequency))
+            yield return new Suggestion(word, 0, wordFrequency);
         
+        if (maxEditDistance == 0) yield break;
+        
+        var seenWords = new HashSet<string>();
         var edits = GenerateEdits(word, maxEditDistance);
 
         foreach (var edit in edits)
@@ -111,12 +115,14 @@ public class SymSpell : ISpellingAlgorithm
             
             foreach (var candidate in candidates)
             {
-                if (!words.Add(candidate)) continue;
+                if (!seenWords.Add(candidate)) continue;
+                if (candidate == word) continue;
+                if (Math.Abs(candidate.Length - word.Length) > maxEditDistance) continue;
 
                 var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
                 if (distance < 0) continue;
                 
-                var frequency = _frequencies[candidate];
+                var frequency = _dictionary[candidate];
                 yield return new Suggestion(candidate, distance, frequency);
             }
         }
