@@ -6,7 +6,7 @@ public class SymSpell : ISpellingAlgorithm
 {
     private const int DefaultEditDistance = 2;
     private const int DefaultPrefixLength = -1;
-    private const int DefaultInitialCapacity = 3_842_500;
+    private const int DefaultInitialCapacity = 3_842_600;
 
     private readonly int _maxEditDistance;
     private readonly int _maxPrefixLength;
@@ -55,6 +55,7 @@ public class SymSpell : ISpellingAlgorithm
             if (_editsMap.TryGetValue(hash, out var candidates))
             {
                 Array.Resize(ref candidates, candidates.Length + 1);
+                _editsMap[hash] = candidates;
             }
             else
             {
@@ -101,9 +102,7 @@ public class SymSpell : ISpellingAlgorithm
     public IEnumerable<Suggestion> FindSuggestions(string term, int maxEditDistance)
     {
         if (maxEditDistance > _maxEditDistance)
-            throw new ArgumentOutOfRangeException(
-                nameof(maxEditDistance), 
-                $"{nameof(maxEditDistance)} should be less or equal to {_maxEditDistance}");
+            throw new ArgumentOutOfRangeException(nameof(maxEditDistance));
         
         if (_dictionary.TryGetValue(term, out var wordFrequency))
             yield return new Suggestion(term, 0, wordFrequency);
