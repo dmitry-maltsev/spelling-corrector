@@ -6,7 +6,7 @@ public class SymSpell : ISpellingAlgorithm
 {
     private const int DefaultEditDistance = 2;
     private const int DefaultPrefixLength = -1;
-    private const int DefaultInitialCapacity = 64_000;
+    private const int DefaultInitialCapacity = 3_842_500;
 
     private readonly int _maxEditDistance;
     private readonly int _maxPrefixLength;
@@ -98,15 +98,20 @@ public class SymSpell : ISpellingAlgorithm
         return s.GetHashCode();
     }
     
-    public IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance)
+    public IEnumerable<Suggestion> FindSuggestions(string term, int maxEditDistance)
     {
-        if (_dictionary.TryGetValue(word, out var wordFrequency))
-            yield return new Suggestion(word, 0, wordFrequency);
+        if (maxEditDistance > _maxEditDistance)
+            throw new ArgumentOutOfRangeException(
+                nameof(maxEditDistance), 
+                $"{nameof(maxEditDistance)} should be less or equal to {_maxEditDistance}");
+        
+        if (_dictionary.TryGetValue(term, out var wordFrequency))
+            yield return new Suggestion(term, 0, wordFrequency);
         
         if (maxEditDistance == 0) yield break;
         
-        var seenWords = new HashSet<string>();
-        var edits = GenerateEdits(word, maxEditDistance);
+        var seenWords = new HashSet<string> { term };
+        var edits = GenerateEdits(term, maxEditDistance);
 
         foreach (var edit in edits)
         {
@@ -116,10 +121,9 @@ public class SymSpell : ISpellingAlgorithm
             foreach (var candidate in candidates)
             {
                 if (!seenWords.Add(candidate)) continue;
-                if (candidate == word) continue;
-                if (Math.Abs(candidate.Length - word.Length) > maxEditDistance) continue;
+                if (Math.Abs(candidate.Length - term.Length) > maxEditDistance) continue;
 
-                var distance = (int)_distanceAlgorithm.Distance(word, candidate, maxEditDistance);
+                var distance = (int)_distanceAlgorithm.Distance(term, candidate, maxEditDistance);
                 if (distance < 0) continue;
                 
                 var frequency = _dictionary[candidate];

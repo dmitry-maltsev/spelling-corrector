@@ -2,5 +2,5 @@ namespace SpellingCorrector.SpellingAlgorithms;
 
 public interface ISpellingAlgorithm
 {
-    IEnumerable<Suggestion> FindSuggestions(string word, int maxEditDistance);
+    IEnumerable<Suggestion> FindSuggestions(string term, int maxEditDistance);
 }
