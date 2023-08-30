@@ -134,8 +134,6 @@ public class SymSpell : ISpellingAlgorithm
             {
                 if (!seenWords.Add(candidate)) continue;
                 if (Math.Abs(candidate.Length - term.Length) > maxEditDistance) continue;
-                if (candidate.Length < edit.Length) continue;
-                if (candidate.Length == edit.Length && candidate != edit) continue;
                 
                 var distance = (int)_distanceAlgorithm.Distance(term, candidate, maxEditDistance);
                 if (distance < 0) continue;
