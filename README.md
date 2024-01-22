@@ -1,0 +1,1 @@
+Various spelling correction algorithms implementations
